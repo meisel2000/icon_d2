@@ -3,3 +3,4 @@ test
 .DS*
 *.swo
 utils.pyc
+/data/*
