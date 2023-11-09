@@ -8,13 +8,13 @@ echo "icon-d2: Starting processing of icon model data - `date`"
 echo "-----------------------------------------------------------------------------------------"
 
 # Folder to be used to download and process data
-export MODEL_DATA_FOLDER="/home/ekman/ssd/guido/icon-d2/"
+export MODEL_DATA_FOLDER="$(pwd)/data"
 export HOME_FOLDER=$(pwd)
-export N_CONCUR_PROCESSES=8
+export N_CONCUR_PROCESSES=3
 export NCFTP_BOOKMARK="mid"
 DATA_DOWNLOAD=true
-DATA_PLOTTING=true
-DATA_UPLOAD=true
+DATA_PLOTTING=false
+DATA_UPLOAD=false
 
 ##### LOAD functions to download model data
 . ./functions_download_dwd.sh
@@ -24,7 +24,7 @@ ulimit -Sn 4096
 ########################################### 
 
 # Retrieve run ##########################
-latest_run=`python get_last_run.py`
+latest_run=`python3 get_last_run.py`
 if [ -f $MODEL_DATA_FOLDER/last_processed_run.txt ]; then
 	latest_processed_run=`while read line; do echo $line; done < $MODEL_DATA_FOLDER/last_processed_run.txt`
 	if [ $latest_run -gt $latest_processed_run ]; then
@@ -44,8 +44,8 @@ echo "Processing run ${latest_run}"
 
 ###########################################
 
-mkdir -p ${MODEL_DATA_FOLDER}it
-mkdir -p ${MODEL_DATA_FOLDER}nord
+#mkdir -p ${MODEL_DATA_FOLDER}it
+#mkdir -p ${MODEL_DATA_FOLDER}nord
 # Move to the data folder to do processing
 cd ${MODEL_DATA_FOLDER} || { echo 'Cannot change to DATA folder' ; exit 1; }
 
@@ -59,17 +59,15 @@ if [ "$DATA_DOWNLOAD" = true ]; then
 	rm ${MODEL_DATA_FOLDER}*.nc
 
 	# # Invariant
-	download_invariant_icon_d2
+	#download_invariant_icon_d2
 
 	# #2-D variables
-	variables=("t_2m" "td_2m" "u_10m" "v_10m" "pmsl" "cape_ml" "vmax_10m" "tot_prec" \
-	"clcl" "clch" "clct" "snowlmt" "hzerocl" "h_snow" "snow_gsp" "grau_gsp" \
-	"rain_gsp" "tmax_2m" "tmin_2m" "ww" "dbz_cmax" "cin_ml" "relhum_2m" "synmsg_bt_cl_ir10.8")
+	variables=("t_2m" "u_10m" "v_10m" "aswdir_s" "aswdifd_s")
 	parallel -j 4 --delay 1 download_merge_2d_variable_icon_d2 ::: "${variables[@]}"
 
 	#3-D variables on pressure levels
-	variables=("t" "fi" "relhum" "u" "v")
-	parallel -j 4 --delay 2 download_merge_3d_variable_icon_d2 ::: "${variables[@]}"
+	#variables=("t" "fi" "relhum" "u" "v")
+	#parallel -j 4 --delay 2 download_merge_3d_variable_icon_d2 ::: "${variables[@]}"
 
 fi 
 
@@ -107,9 +105,9 @@ fi
 # don't undermine the whole processing! 
 
 N_NETCDF_FILES=`find . -type f -name '*.nc' -printf x | wc -c`
-N_IMAGES=`find . -type f -name '*.png' -printf x | wc -c`
+#N_IMAGES=`find . -type f -name '*.png' -printf x | wc -c`
 
-if [ $N_NETCDF_FILES -ge 2 ] && [ $N_IMAGES -ge 10 ]; then
+if [ $N_NETCDF_FILES -ge 2 ]; then
 	echo ${latest_run} > last_processed_run.txt
 fi
 
